@@ -9,17 +9,15 @@ import repast.simphony.context.space.graph.NetworkBuilder;
 import repast.simphony.context.space.grid.GridFactory;
 import repast.simphony.context.space.grid.GridFactoryFinder;
 import repast.simphony.dataLoader.ContextBuilder;
-import repast.simphony.random.RandomHelper;
-import repast.simphony.space.continuous.NdPoint;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridBuilderParameters;
-import repast.simphony.space.grid.GridPoint;
 import repast.simphony.space.grid.SimpleGridAdder;
 import repast.simphony.space.grid.WrapAroundBorders;
 import stages.Stages;
 
 public class PipelineBuilder implements ContextBuilder<Object>{
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Context build(Context<Object> context) {
 		//*************************************************************************************
@@ -39,17 +37,8 @@ public class PipelineBuilder implements ContextBuilder<Object>{
 		netBuilder.buildNetwork ();
 		//*************************************************************************************
 		//get Pipeline: the first argument is the number of pipeline
-		Map<Integer, ArrayList<Stages>> myPipelines = getPipeline(5, context, grid); 
-		
-		int jobCount = 100;
-		for (int i = 0; i < jobCount ; i++) {
-			Job new_job = new Job(grid, myPipelines);
-			context.add(new_job);
-		}
-		return context;
-	}
-	
-	private Map<Integer, ArrayList<Stages>> getPipeline(int num_pipelines, Context<Object> context, Grid<Object> grid) {
+		int num_pipelines = 5;
+		int num_stages = 6; 
 		//*************************************************************************************
 		//Build Pipeline
 		int total_num_pipeline = num_pipelines;
@@ -60,7 +49,7 @@ public class PipelineBuilder implements ContextBuilder<Object>{
 		ArrayList<Stages> sSTG = new ArrayList<Stages>(total_num_pipeline);
 		ArrayList<Stages> sProd = new ArrayList<Stages>(total_num_pipeline);
 				
-		int totol_num_stages = 6;
+		int totol_num_stages = num_stages;
 		Map<Integer, ArrayList<Stages>> pipeline = new HashMap<>(totol_num_stages);
 				
 		for (int i = 1; i <= total_num_pipeline; i++) {
@@ -98,7 +87,14 @@ public class PipelineBuilder implements ContextBuilder<Object>{
 		pipeline.put(4, sUAT);
 		pipeline.put(5, sSTG);
 		pipeline.put(6, sProd);
-		return pipeline;
+		
+		int jobCount = 100;
+		for (int i = 0; i < jobCount ; i++) {
+			Job new_job = new Job(num_pipelines, num_stages, grid, pipeline);
+			context.add(new_job);
+		}
+		return context;
 	}
+	
 
 }

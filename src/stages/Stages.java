@@ -11,6 +11,7 @@ public class Stages {
 	public Stages(int pipelineID, int stageID) {
 		this.pipelineID = pipelineID;
 		this.stageID = stageID;
+		getInfo();
 	}
 	
 	public void getInfo(){
@@ -67,4 +68,5 @@ public class Stages {
 	public void addNewJob() {
 		currentJobs = currentJobs + 1; 
 	}
+	
 }
