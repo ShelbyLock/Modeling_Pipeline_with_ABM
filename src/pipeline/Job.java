@@ -20,7 +20,8 @@ public class Job {
 	private Map<Integer, ArrayList<Stages>> pipelines;
 	private int num_pipelines;
 	private int num_stages;
-	private boolean justStarted = true;
+	private boolean justCommitted = true;
+	private int currentStage = 1; 
 	
 	private int time = 0;
 	public Job (int num_pipelines, int num_stages, Grid <Object > grid, Map<Integer, ArrayList<Stages>> pipelines){	
@@ -34,12 +35,12 @@ public class Job {
 	
 	@ScheduledMethod(start = 1, interval = 1)
 	public void changeState() {
-		if (justStarted) {
+		if (justCommitted) {
 			int pipelineID = RandomHelper.nextIntFromTo (0, num_pipelines - 1);
 			//went to the commit stage in a random pipeline
 			Stages commit = pipelines.get(1).get(pipelineID);
 			grid.moveTo(this, commit.getX(), commit.getY());
-			justStarted = false;
+			justCommitted = false;
 		}else
 			moveStage();
 		
@@ -56,7 +57,8 @@ public class Job {
 		//Go to a random stage : this does not include the commit stage
 		int stageID = RandomHelper.nextIntFromTo (2, num_stages);
 		ArrayList<Stages> stage = pipelines.get(stageID);
-		int pipelineID = RandomHelper.nextIntFromTo (0, num_pipelines - 1);	
+		int pipelineID = RandomHelper.nextIntFromTo (0, num_pipelines - 1);
+		currentStage = stageID;
 		Stages s = stage.get(pipelineID);
 		grid.moveTo(this, s.getX(), s.getY()); 
 		net.addEdge(temp, this);

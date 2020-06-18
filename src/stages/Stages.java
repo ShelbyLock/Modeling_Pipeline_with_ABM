@@ -1,5 +1,8 @@
 package stages;
 
+import repast.simphony.engine.watcher.Watch;
+import repast.simphony.engine.watcher.WatcherTriggerSchedule;
+
 public class Stages {
 	private int pipelineID;
 	private int stageID;
@@ -13,6 +16,21 @@ public class Stages {
 		this.stageID = stageID;
 		getInfo();
 	}
+	@Watch(watcheeClassName = "pipeline.Job", watcheeFieldNames = "currentStage", 
+			query = "within_vn 1", whenToTrigger = WatcherTriggerSchedule.IMMEDIATE)
+	public void handlingJobs() {
+		//this.stageID
+		this.currentJobs ++;
+	}
+	
+	public void putIntoWaitList() {
+		
+	}
+	
+	public void getFromWaitList() {
+		
+	}
+	
 	
 	public void getInfo(){
 		int num = this.pipelineID;
