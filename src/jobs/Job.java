@@ -3,6 +3,7 @@ package jobs;
 import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.random.RandomHelper;
 import stages.Stage;
+import stages.StageHistory;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -10,17 +11,18 @@ import java.util.Random;
 
 public class Job {
 	//Basic Information
-	private Map<Integer, ArrayList<Stage>> pipelines;
+	public Map<Integer, ArrayList<Stage>> pipelines;
 	private int num_pipelines;
 	private int num_stages;
 	
 	//Process Information
-	public ArrayList<Stage> stageHistoryList = new ArrayList<Stage>();
+	public ArrayList<StageHistory> stageHistoryList = new ArrayList<StageHistory>();
 	private int abortedRestartStageID = 0;
 	public boolean isHandled;
 	public boolean isAborted;
 	
 	//Job properties
+	@SuppressWarnings("unused")
 	private int jobID;
 	public int processedTime = 0;
 	
@@ -39,27 +41,27 @@ public class Job {
 	@ScheduledMethod(start = 2, interval = 1)
 	public void changeState() {
 		int nextStageID;
-		if (isAborted)
+		if (this.isAborted)
 			nextStageID = abortedRestartStageID;
 		else
-			nextStageID = RandomHelper.nextIntFromTo (0, num_stages-1);
+			nextStageID = RandomHelper.nextIntFromTo (0, this.num_stages-1);
 		
-		if (isHandled) {
+		if (this.isHandled) {
 			moveToDifferentStage(nextStageID);
 		} 
 	}
 	
 	public void moveToDifferentStage(int nextStageID) {
 		//Go to a random stage
-		int nextPipelineID = RandomHelper.nextIntFromTo (0, num_pipelines - 1);
+		int nextPipelineID = RandomHelper.nextIntFromTo (0, this.num_pipelines - 1);
 		ArrayList<Stage> sameStageInDifferentPipelines = pipelines.get(nextStageID);
 		Stage nextStage = sameStageInDifferentPipelines.get(nextPipelineID);
-		stageHistoryList.add(nextStage);
+		this.stageHistoryList.add(new StageHistory(nextPipelineID, nextStageID));
 		nextStage.addNewJob(this);
 		
 		//decide if it is manual
 		nextStage.isManual = new Random().nextBoolean();
-		isHandled = false;
+		this.isHandled = false;
 	}
 }
 

@@ -1,7 +1,6 @@
 package stages;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Random;
 
 import jobs.Job;
@@ -30,6 +29,7 @@ public class Stage {
 	public boolean isManual;
 	private int manualProcessTime;
 	
+	//private double abortedRatio;
 	public Stage(int pipelineID, int stageID, Grid <Object > grid) {
 		this.setPipelineID(pipelineID);
 		this.setStageID(stageID);
@@ -45,7 +45,7 @@ public class Stage {
 	}
 
 	@SuppressWarnings("unchecked")
-	@ScheduledMethod(start = 2, interval = 1)
+	@ScheduledMethod(start = 3, interval = 1)
 	public void handlingJobs() {
 		//The context which the job is operating on.
 		Context<Object> context = ContextUtils.getContext (this); 
@@ -53,28 +53,30 @@ public class Stage {
 		Network<Object> net = ( Network <Object>) context.getProjection ("infection network");		
 		int countHandling = 0;
 		
-		while (numJobs >= 1 && (countHandling < capacity)) {
-			Job currentJob = jobQueue.get(0);
+		while (numJobs > 0 && (countHandling < capacity)) {
+			Job currentJob = this.jobQueue.get(0);
 			boolean shoudStageAbort = new Random().nextBoolean();
 	
 			if (!shoudStageAbort) {
-				grid.moveTo(currentJob, this.getX(), this.getY()); 
-				int numElement = currentJob.stageHistoryList.size();
-				if (1 < numElement) {
-					net.addEdge(currentJob.stageHistoryList.get(numElement - 2), currentJob.stageHistoryList.get(numElement - 1));
-				}
 				currentJob.isAborted = false;
 			}else
 				currentJob.isAborted = true;			
-
 			
 			if (isManual)
 				currentJob.processedTime = manualProcessTime;
 			else
 				currentJob.processedTime = duration;
+					
+			grid.moveTo(currentJob, this.getX(), this.getY()); 
+			int numElement = currentJob.stageHistoryList.size();
+			if (numElement > 1) {
+				StageHistory sh1 = currentJob.stageHistoryList.get(numElement - 2);
+				StageHistory sh2 = currentJob.stageHistoryList.get(numElement - 1);
+				net.addEdge(currentJob.pipelines.get(sh1.getStageID()).get(sh1.getPipelineID()), currentJob.pipelines.get(sh2.getStageID()).get(sh2.getPipelineID()));
+			}
 			
 			currentJob.isHandled = true;
-			jobQueue.remove(0);
+			this.jobQueue.remove(0);
 			this.numJobs--;
 			countHandling++;	
 		}		
@@ -83,22 +85,6 @@ public class Stage {
 	public void addNewJob(Job job) {
 		jobQueue.add(job);
 		numJobs++; 
-	}
-	
-	public void cleanUpNetworkGraph(Network<Object> net, Job currentJob) {
-		int count = 1;
-		/*
-		while (count < currentJob.stageHistoryList.size() - 1) {
-			RepastEdge<Object> currentEdge = net.getEdge(currentJob.stageHistoryList.get(count-1), currentJob.stageHistoryList.get(count));
-			net.removeEdge(currentEdge);
-			//net.addEdge(currentJob.stageHistoryList.get(count - 1), currentJob.stageHistoryList.get(count));
-			count++;
-		}*/
-		int numElement = currentJob.stageHistoryList.size();
-		if (count < numElement - 1) {
-			net.addEdge(currentJob.stageHistoryList.get(numElement - 2), currentJob.stageHistoryList.get(numElement - 1));
-		}
-		//net.addEdge(this, currentJob);
 	}
 	public int getX(){
 		return x;
