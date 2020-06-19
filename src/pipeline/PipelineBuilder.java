@@ -28,7 +28,6 @@ public class PipelineBuilder implements ContextBuilder<Object>{
 		GridFactory gridFactory = GridFactoryFinder.createGridFactory ( null );
 		//*************************************************************************************
 		//Initialize the grid
-		// Correct import : import repast . simphony . space . grid . WrapAroundBorders ;
 		Grid<Object> grid = gridFactory.createGrid ("grid", context , 
 													new GridBuilderParameters <Object>( new WrapAroundBorders(),
 															new SimpleGridAdder <Object>(),
@@ -57,11 +56,11 @@ public class PipelineBuilder implements ContextBuilder<Object>{
 		//Create Jobs -> commit Jobs
 		int jobCount = 100;
 		for (int i = 0; i < jobCount ; i++) {
-			Job new_job = new Job(i,num_pipelines, num_stages, grid, pipeline);
+			Job new_job = new Job(i,num_pipelines, num_stages, pipeline);
 			context.add(new_job);
 			int pipelineID = RandomHelper.nextIntFromTo (0, num_pipelines - 1);
 			Stage build = pipeline.get(1).get(pipelineID);
-			build.addNewJob(i, new_job);
+			build.addNewJob(new_job);
 		}
 		return context;
 	}
