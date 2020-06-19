@@ -54,12 +54,13 @@ public class PipelineBuilder implements ContextBuilder<Object>{
 		}
 		//*************************************************************************************
 		//Create Jobs -> commit Jobs
-		int jobCount = 100;
+		int jobCount = 1;
 		for (int i = 0; i < jobCount ; i++) {
 			Job new_job = new Job(i,num_pipelines, num_stages, pipeline);
 			context.add(new_job);
 			int pipelineID = RandomHelper.nextIntFromTo (0, num_pipelines - 1);
 			Stage build = pipeline.get(1).get(pipelineID);
+			new_job.stageHistoryList.add(build);
 			build.addNewJob(new_job);
 		}
 		return context;
