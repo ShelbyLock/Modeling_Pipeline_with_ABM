@@ -15,11 +15,8 @@ public class Job {
 	private int num_stages;
 	
 	//Process Information
-	private Stage nextStage;
-	private int nextStageID;
 	public ArrayList<Stage> stageHistoryList = new ArrayList<Stage>();
-	private int nextPipelineID;
-	private int abortedRestartStageID = 1;
+	private int abortedRestartStageID = 0;
 	public boolean isHandled;
 	public boolean isAborted;
 	
@@ -33,6 +30,7 @@ public class Job {
 		this.num_pipelines = num_pipelines;
 		this.num_stages = num_stages;
 		
+		
 		this.isHandled = false;
 		this.isAborted = false;	
 		//this.time = 0;
@@ -40,24 +38,28 @@ public class Job {
 	
 	@ScheduledMethod(start = 2, interval = 1)
 	public void changeState() {
-		
+		int nextStageID;
 		if (isAborted)
 			nextStageID = abortedRestartStageID;
 		else
-			nextStageID = RandomHelper.nextIntFromTo (1, num_stages);
+			nextStageID = RandomHelper.nextIntFromTo (0, num_stages-1);
 		
 		if (isHandled) {
-			//Go to a random stage
-			nextPipelineID = RandomHelper.nextIntFromTo (0, num_pipelines - 1);
-			ArrayList<Stage> sameStageInDifferentPipelines = pipelines.get(nextStageID);
-			nextStage = sameStageInDifferentPipelines.get(nextPipelineID);
-			stageHistoryList.add(nextStage);
-			nextStage.addNewJob(this);
-			
-			//decide if it is manual
-			nextStage.isManual = new Random().nextBoolean();
-			isHandled = false;
+			moveToDifferentStage(nextStageID);
 		} 
+	}
+	
+	public void moveToDifferentStage(int nextStageID) {
+		//Go to a random stage
+		int nextPipelineID = RandomHelper.nextIntFromTo (0, num_pipelines - 1);
+		ArrayList<Stage> sameStageInDifferentPipelines = pipelines.get(nextStageID);
+		Stage nextStage = sameStageInDifferentPipelines.get(nextPipelineID);
+		stageHistoryList.add(nextStage);
+		nextStage.addNewJob(this);
+		
+		//decide if it is manual
+		nextStage.isManual = new Random().nextBoolean();
+		isHandled = false;
 	}
 }
 

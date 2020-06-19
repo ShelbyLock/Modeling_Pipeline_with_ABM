@@ -8,7 +8,6 @@ import jobs.Job;
 import repast.simphony.context.Context;
 import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.space.graph.Network;
-import repast.simphony.space.graph.RepastEdge;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.util.ContextUtils;
 
@@ -36,7 +35,7 @@ public class Stage {
 		this.setStageID(stageID);
 		this.grid = grid;
 		this.x = stageID * 5;
-		this.y = stageID + ((pipelineID - 1)* 10);
+		this.y = stageID + (pipelineID* 10);
 		
 		this.numJobs = 0;	
 		this.capacity = 5;
@@ -51,16 +50,19 @@ public class Stage {
 		//The context which the job is operating on.
 		Context<Object> context = ContextUtils.getContext (this); 
 		//The network that paint the traces of the job
-		Network<Object> net = ( Network <Object>) context.getProjection ("infection network");
-		
+		Network<Object> net = ( Network <Object>) context.getProjection ("infection network");		
 		int countHandling = 0;
+		
 		while (numJobs >= 1 && (countHandling < capacity)) {
 			Job currentJob = jobQueue.get(0);
 			boolean shoudStageAbort = new Random().nextBoolean();
 	
 			if (!shoudStageAbort) {
-				cleanUpNetworkGraph(net, currentJob);
 				grid.moveTo(currentJob, this.getX(), this.getY()); 
+				int numElement = currentJob.stageHistoryList.size();
+				if (1 < numElement) {
+					net.addEdge(currentJob.stageHistoryList.get(numElement - 2), currentJob.stageHistoryList.get(numElement - 1));
+				}
 				currentJob.isAborted = false;
 			}else
 				currentJob.isAborted = true;			
@@ -72,7 +74,7 @@ public class Stage {
 				currentJob.processedTime = duration;
 			
 			currentJob.isHandled = true;
-			jobQueue.remove(currentJob);
+			jobQueue.remove(0);
 			this.numJobs--;
 			countHandling++;	
 		}		
@@ -85,12 +87,18 @@ public class Stage {
 	
 	public void cleanUpNetworkGraph(Network<Object> net, Job currentJob) {
 		int count = 1;
+		/*
 		while (count < currentJob.stageHistoryList.size() - 1) {
-			RepastEdge<Object> currentEdge = net.getEdge(currentJob.stageHistoryList.get(count-1), currentJob);
-			net.removeEdge(currentEdge);	
-			count ++;
+			RepastEdge<Object> currentEdge = net.getEdge(currentJob.stageHistoryList.get(count-1), currentJob.stageHistoryList.get(count));
+			net.removeEdge(currentEdge);
+			//net.addEdge(currentJob.stageHistoryList.get(count - 1), currentJob.stageHistoryList.get(count));
+			count++;
+		}*/
+		int numElement = currentJob.stageHistoryList.size();
+		if (count < numElement - 1) {
+			net.addEdge(currentJob.stageHistoryList.get(numElement - 2), currentJob.stageHistoryList.get(numElement - 1));
 		}
-		net.addEdge(this, currentJob);
+		//net.addEdge(this, currentJob);
 	}
 	public int getX(){
 		return x;
