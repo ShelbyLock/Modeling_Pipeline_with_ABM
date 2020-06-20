@@ -56,7 +56,7 @@ public class PipelineBuilder implements ContextBuilder<Object>{
 		for (int i = 0; i < jobCount ; i++) {
 			Job new_job = new Job(i,num_pipelines, num_stages, pipeline);
 			context.add(new_job);		
-			new_job.moveToDifferentStage(1);
+			new_job.moveToDifferentStage(0);
 		}
 		return context;
 	}

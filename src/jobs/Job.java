@@ -20,11 +20,17 @@ public class Job {
 	private int abortedRestartStageID = 0;
 	public boolean isHandled;
 	public boolean isAborted;
+	public boolean isManual;
+	
+	public double abortRatio;
+	public double manualRatio;
 	
 	//Job properties
 	@SuppressWarnings("unused")
 	private int jobID;
+	public int processedTotalTime = 0;
 	public int processedTime = 0;
+	public int abortWaitingTime = 0;
 	
 	public Job (int jobID, int num_pipelines, int num_stages, Map<Integer, ArrayList<Stage>> pipelines){	
 		this.jobID = jobID;
@@ -35,18 +41,21 @@ public class Job {
 		
 		this.isHandled = false;
 		this.isAborted = false;	
-		//this.time = 0;
 	}
 	
 	@ScheduledMethod(start = 2, interval = 1)
 	public void changeState() {
 		int nextStageID;
-		if (this.isAborted)
+		if (this.isAborted) 
 			nextStageID = abortedRestartStageID;
 		else
 			nextStageID = RandomHelper.nextIntFromTo (0, this.num_stages-1);
 		
-		if (this.isHandled) {
+		this.isAborted = false;
+		
+		if (this.abortWaitingTime != 0)
+			this.abortWaitingTime--;
+		else if (this.isHandled) {
 			moveToDifferentStage(nextStageID);
 		} 
 	}
@@ -60,7 +69,7 @@ public class Job {
 		nextStage.addNewJob(this);
 		
 		//decide if it is manual
-		nextStage.isManual = new Random().nextBoolean();
+		this.isManual = new Random().nextBoolean();
 		this.isHandled = false;
 	}
 }

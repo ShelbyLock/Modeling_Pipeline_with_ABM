@@ -21,14 +21,12 @@ public class Stage {
 	//Process Information
 	private ArrayList<Job> jobQueue = new ArrayList<Job>();
 	private int numJobs;
-	
 	//stage properties
 	private int capacity;
 	private int duration;
 	
-	public boolean isManual;
 	private int manualProcessTime;
-	
+	public int abortWaitingTime = 10;
 	//private double abortedRatio;
 	public Stage(int pipelineID, int stageID, Grid <Object > grid) {
 		this.setPipelineID(pipelineID);
@@ -41,32 +39,37 @@ public class Stage {
 		this.capacity = 5;
 		this.duration = 3;
 		this.manualProcessTime = 10;
-		isManual = false;
+
 	}
 
 	@SuppressWarnings("unchecked")
 	@ScheduledMethod(start = 3, interval = 1)
 	public void handlingJobs() {
-		//The context which the job is operating on.
+		//The context and network which jobs are operating on.
 		Context<Object> context = ContextUtils.getContext (this); 
-		//The network that paint the traces of the job
 		Network<Object> net = ( Network <Object>) context.getProjection ("infection network");		
-		int countHandling = 0;
-		
-		while (numJobs > 0 && (countHandling < capacity)) {
-			Job currentJob = this.jobQueue.get(0);
+		int jobsProcessedByStage = 0;
+		while (numJobs > 0 && (jobsProcessedByStage < capacity)) {
+			Job currentJob = this.jobQueue.get(jobsProcessedByStage);
 			boolean shoudStageAbort = new Random().nextBoolean();
 	
-			if (!shoudStageAbort) {
+			if (!shoudStageAbort) 
 				currentJob.isAborted = false;
-			}else
-				currentJob.isAborted = true;			
+			else {
+				currentJob.isAborted = true;
+				currentJob.processedTotalTime = currentJob.processedTotalTime + abortWaitingTime;
+				currentJob.abortWaitingTime = abortWaitingTime;
+			}
 			
-			if (isManual)
+			if (currentJob.isManual) {
+				currentJob.processedTotalTime = currentJob.processedTotalTime + manualProcessTime;
 				currentJob.processedTime = manualProcessTime;
-			else
+			}
+			else {
+				currentJob.processedTime = currentJob.processedTotalTime + duration;
 				currentJob.processedTime = duration;
-					
+			}
+			
 			grid.moveTo(currentJob, this.getX(), this.getY()); 
 			int numElement = currentJob.stageHistoryList.size();
 			if (numElement > 1) {
@@ -75,10 +78,16 @@ public class Stage {
 				net.addEdge(currentJob.pipelines.get(sh1.getStageID()).get(sh1.getPipelineID()), currentJob.pipelines.get(sh2.getStageID()).get(sh2.getPipelineID()));
 			}
 			
-			currentJob.isHandled = true;
-			this.jobQueue.remove(0);
-			this.numJobs--;
-			countHandling++;	
+			if (currentJob.processedTime != 0)
+				currentJob.processedTime--;
+			else {
+				currentJob.isHandled = true;
+				this.jobQueue.remove(currentJob);
+				this.numJobs--;		
+				jobsProcessedByStage--;
+			}
+			
+			jobsProcessedByStage++;
 		}		
 	}
 	
