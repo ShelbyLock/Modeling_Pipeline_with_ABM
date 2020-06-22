@@ -1,13 +1,14 @@
 package jobs;
 
 import repast.simphony.engine.schedule.ScheduledMethod;
+import repast.simphony.parameter.Parameters;
 import repast.simphony.random.RandomHelper;
 import stages.Stage;
 import stages.StageHistory;
-
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Random;
+
+import helper.DistributedRandomNumberGenerator;
 
 public class Job {
 
@@ -15,29 +16,30 @@ public class Job {
 	public Map<Integer, ArrayList<Stage>> pipelines;
 	private int num_pipelines;
 	private int num_stages;
+	private int abortedRestartStageID = 0;
+	private double manualRatio;
 	
 	//Process Information
 	public ArrayList<StageHistory> stageHistoryList = new ArrayList<StageHistory>();
-	private int abortedRestartStageID = 0;
 	public boolean isHandled;
 	public boolean isAborted;
 	public boolean isManual;
-	
-	public double abortRatio;
-	public double manualRatio;
+	public int abortWaitingTime = 0;
 	
 	//Job properties
 	private int jobID;
 	public int processedTotalTime = 0;
 	public int processedTime = 0;
-	public int abortWaitingTime = 0;
 	
-	public Job (int jobID, int num_pipelines, int num_stages, Map<Integer, ArrayList<Stage>> pipelines){	
+	public Job (int jobID, Parameters params, Map<Integer, ArrayList<Stage>> pipelines){	
 		this.jobID = jobID;
 		this.pipelines = pipelines;
-		this.num_pipelines = num_pipelines;
-		this.num_stages = num_stages;
 		
+		this.num_pipelines = params.getInteger("num_pipelines"); 
+		this.num_stages = params.getInteger("num_stages"); 
+		this.abortedRestartStageID = params.getInteger("abortedRestartStageID");
+		this.abortWaitingTime = 0;
+		this.manualRatio = params.getDouble("manualRatio");
 		
 		this.isHandled = false;
 		this.isAborted = false;	
@@ -70,7 +72,8 @@ public class Job {
 		nextStage.addNewJob(this);
 		
 		//decide if it is manual
-		this.isManual = new Random().nextBoolean();
+		//this.isManual = new Random().nextBoolean();
+		this.isManual = new DistributedRandomNumberGenerator().getDistributedBoolean(manualRatio); 
 		this.isHandled = false;
 	}
 	

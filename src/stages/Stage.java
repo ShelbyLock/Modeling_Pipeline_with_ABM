@@ -1,11 +1,11 @@
 package stages;
 
 import java.util.ArrayList;
-import java.util.Random;
-
+import helper.DistributedRandomNumberGenerator;
 import jobs.Job;
 import repast.simphony.context.Context;
 import repast.simphony.engine.schedule.ScheduledMethod;
+import repast.simphony.parameter.Parameters;
 import repast.simphony.space.graph.Network;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.util.ContextUtils;
@@ -20,26 +20,29 @@ public class Stage {
 	
 	//Process Information
 	private ArrayList<Job> jobQueue = new ArrayList<Job>();
+	private double abortRatio;
 	private int numJobs;
+	
 	//stage properties
 	private int capacity;
-	private int duration;
-	
+	private int duration;	
 	private int manualProcessTime;
-	public int abortWaitingTime = 10;
+	private int abortWaitingTime;
 	//private double abortedRatio;
-	public Stage(int pipelineID, int stageID, Grid <Object > grid) {
+	public Stage(int pipelineID, int stageID, Parameters params, Grid <Object > grid) {
 		this.setPipelineID(pipelineID);
 		this.setStageID(stageID);
 		this.grid = grid;
 		this.x = stageID * 5;
 		this.y = stageID + (pipelineID* 10);
 		
+		this.capacity = params.getInteger("capacity"); 
+		this.duration = params.getInteger("duration"); 
+		this.abortRatio = params.getDouble("abortRatio");
+		this.manualProcessTime = params.getInteger("manualProcessTime"); 
+		this.abortWaitingTime = params.getInteger("abortWaitingTime");
+		
 		this.numJobs = 0;	
-		this.capacity = 5;
-		this.duration = 3;
-		this.manualProcessTime = 10;
-
 	}
 	@ScheduledMethod(start = 1, interval = 1)
 	public void handlingJobs() {	
@@ -79,7 +82,7 @@ public class Stage {
 		
 		
 		grid.moveTo(currentJob, this.getX(), this.getY()); 
-		//下面能简化
+		//TODO: I should make this code simpler
 		int numElement = currentJob.stageHistoryList.size();
 		if (numElement > 1) {
 			StageHistory sh1 = currentJob.stageHistoryList.get(numElement - 2);
@@ -108,14 +111,14 @@ public class Stage {
 	}
 	
 	public void shouldIabortCurrentJob(Job currentJob) {
-		boolean shoudStageAbort = new Random().nextBoolean();
-		if (!shoudStageAbort) {
-			currentJob.isAborted = false;
+		//boolean shoudStageAbort = new Random().nextBoolean();
+		boolean isAborted = new DistributedRandomNumberGenerator().getDistributedBoolean(abortRatio); 
+		currentJob.isAborted = isAborted;
+		if (!isAborted) {
 			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
 			System.out.print("(JobID: " +Integer.toString(currentJob.getJobID())+ ") is not aborted! \n");
 		}
 		else {
-			currentJob.isAborted = true;
 			currentJob.processedTotalTime = currentJob.processedTotalTime + abortWaitingTime;
 			currentJob.abortWaitingTime = abortWaitingTime;
 			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");

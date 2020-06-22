@@ -9,6 +9,8 @@ import repast.simphony.context.space.graph.NetworkBuilder;
 import repast.simphony.context.space.grid.GridFactory;
 import repast.simphony.context.space.grid.GridFactoryFinder;
 import repast.simphony.dataLoader.ContextBuilder;
+import repast.simphony.engine.environment.RunEnvironment;
+import repast.simphony.parameter.Parameters;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridBuilderParameters;
 import repast.simphony.space.grid.SimpleGridAdder;
@@ -36,13 +38,14 @@ public class PipelineBuilder implements ContextBuilder<Object>{
 		netBuilder.buildNetwork ();
 		//*************************************************************************************
 		//Build Pipeline
-		int num_stages = 5; 
-		int num_pipelines = 6;
+		Parameters params = RunEnvironment.getInstance().getParameters();
+		int num_stages = params.getInteger("num_stages"); 
+		int num_pipelines = params.getInteger("num_pipelines"); 
 		Map<Integer, ArrayList<Stage>> pipeline = new HashMap<>(num_stages);
 		for (int j = 0; j < num_stages; j++) {
 			ArrayList<Stage> sameStageInDifferentPipelines = new ArrayList<Stage>(num_pipelines);
 			for (int i = 0; i < num_pipelines; i++) {
-				Stage tempStages = new Stage(i,j,grid);
+				Stage tempStages = new Stage(i,j,params, grid);
 				sameStageInDifferentPipelines.add(tempStages);
 				
 				context.add(tempStages);
@@ -52,9 +55,9 @@ public class PipelineBuilder implements ContextBuilder<Object>{
 		}
 		//*************************************************************************************
 		//Create Jobs -> commit Jobs
-		int jobCount = 10;
+		int jobCount = params.getInteger("num_jobs"); 
 		for (int i = 0; i < jobCount ; i++) {
-			Job new_job = new Job(i,num_pipelines, num_stages, pipeline);
+			Job new_job = new Job(i,params, pipeline);
 			context.add(new_job);		
 			new_job.moveNextStage(0);
 		}
