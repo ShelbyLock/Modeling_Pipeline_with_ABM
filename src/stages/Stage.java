@@ -41,56 +41,87 @@ public class Stage {
 		this.manualProcessTime = 10;
 
 	}
-
-	@SuppressWarnings("unchecked")
-	@ScheduledMethod(start = 3, interval = 1)
-	public void handlingJobs() {
-		//The context and network which jobs are operating on.
-		Context<Object> context = ContextUtils.getContext (this); 
-		Network<Object> net = ( Network <Object>) context.getProjection ("infection network");		
+	@ScheduledMethod(start = 1, interval = 1)
+	public void handlingJobs() {	
 		int jobsProcessedByStage = 0;
-		while (numJobs > 0 && (jobsProcessedByStage < capacity)) {
+		while (numJobs > jobsProcessedByStage && (jobsProcessedByStage < capacity)) {
 			Job currentJob = this.jobQueue.get(jobsProcessedByStage);
-			boolean shoudStageAbort = new Random().nextBoolean();
-	
-			if (!shoudStageAbort) 
-				currentJob.isAborted = false;
-			else {
-				currentJob.isAborted = true;
-				currentJob.processedTotalTime = currentJob.processedTotalTime + abortWaitingTime;
-				currentJob.abortWaitingTime = abortWaitingTime;
-			}
 			
-			if (currentJob.isManual) {
-				currentJob.processedTotalTime = currentJob.processedTotalTime + manualProcessTime;
-				currentJob.processedTime = manualProcessTime;
-			}
-			else {
-				currentJob.processedTime = currentJob.processedTotalTime + duration;
-				currentJob.processedTime = duration;
-			}
-			
-			grid.moveTo(currentJob, this.getX(), this.getY()); 
-			int numElement = currentJob.stageHistoryList.size();
-			if (numElement > 1) {
-				StageHistory sh1 = currentJob.stageHistoryList.get(numElement - 2);
-				StageHistory sh2 = currentJob.stageHistoryList.get(numElement - 1);
-				net.addEdge(currentJob.pipelines.get(sh1.getStageID()).get(sh1.getPipelineID()), currentJob.pipelines.get(sh2.getStageID()).get(sh2.getPipelineID()));
-			}
-			
-			if (currentJob.processedTime != 0)
-				currentJob.processedTime--;
-			else {
-				currentJob.isHandled = true;
-				this.jobQueue.remove(currentJob);
-				this.numJobs--;		
-				jobsProcessedByStage--;
-			}
-			
+			//Determine if this is a new job or an ongoing job
+			if (currentJob.processedTime > 0)
+			{
+				jobsProcessedByStage = handlingOnGoingJob(currentJob, jobsProcessedByStage);				
+			} else
+			{
+				handlingNewJob(currentJob);
+			}		
 			jobsProcessedByStage++;
 		}		
 	}
 	
+	@SuppressWarnings("unchecked")
+	public void handlingNewJob(Job currentJob){
+		//The context and network which jobs are operating on.
+		Context<Object> context = ContextUtils.getContext (this); 
+		Network<Object> net = ( Network <Object>) context.getProjection ("infection network");	
+		if (currentJob.isManual) {
+			currentJob.processedTotalTime = currentJob.processedTotalTime + manualProcessTime;
+			currentJob.processedTime = manualProcessTime;
+			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
+			System.out.print("Job (JobID: " +Integer.toString(currentJob.getJobID())+ ") is manually processed! \n");
+		}
+		else {
+			currentJob.processedTime = currentJob.processedTotalTime + duration;
+			currentJob.processedTime = duration;
+			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
+			System.out.print("Job (JobID: "+Integer.toString(currentJob.getJobID())+") is automatically processed! \n");
+		}
+		
+		
+		grid.moveTo(currentJob, this.getX(), this.getY()); 
+		//下面能简化
+		int numElement = currentJob.stageHistoryList.size();
+		if (numElement > 1) {
+			StageHistory sh1 = currentJob.stageHistoryList.get(numElement - 2);
+			StageHistory sh2 = currentJob.stageHistoryList.get(numElement - 1);
+			net.addEdge(currentJob.pipelines.get(sh1.getStageID()).get(sh1.getPipelineID()), currentJob.pipelines.get(sh2.getStageID()).get(sh2.getPipelineID()));
+		}
+	}
+	
+	public int handlingOnGoingJob(Job currentJob, int jobsProcessedByStage) {
+		
+		currentJob.processedTime--;
+		System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
+		System.out.print("Handling Job (JobID: " +Integer.toString(currentJob.getJobID())+ ") the remaining time is "+ Integer.toString(currentJob.processedTime) +"\n");
+
+		if (currentJob.processedTime == 0) {
+			currentJob.isHandled = true;
+			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
+			System.out.print("Finish Job (JobID: " +Integer.toString(currentJob.getJobID())+") \n");
+			shouldIabortCurrentJob(currentJob);
+			
+			this.jobQueue.remove(currentJob);
+			this.numJobs--;		
+			jobsProcessedByStage--;
+		}
+		return jobsProcessedByStage;
+	}
+	
+	public void shouldIabortCurrentJob(Job currentJob) {
+		boolean shoudStageAbort = new Random().nextBoolean();
+		if (!shoudStageAbort) {
+			currentJob.isAborted = false;
+			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
+			System.out.print("Job (JobID: " +Integer.toString(currentJob.getJobID())+ ") is not aborted! \n");
+		}
+		else {
+			currentJob.isAborted = true;
+			currentJob.processedTotalTime = currentJob.processedTotalTime + abortWaitingTime;
+			currentJob.abortWaitingTime = abortWaitingTime;
+			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
+			System.out.print("Job (JobID: " +Integer.toString(currentJob.getJobID())+ ") is aborted! \n");
+		}
+	}
 	public void addNewJob(Job job) {
 		jobQueue.add(job);
 		numJobs++; 
