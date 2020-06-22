@@ -30,6 +30,13 @@ public class Job {
 	private int jobID;
 	public int processedTotalTime = 0;
 	public int processedTime = 0;
+	//TODO: Record waiting Time
+	public int waitingTIme;
+	//TODO: List or single duration Process determined by distribution, overwrite duration attributes in stage
+	public int timeProfileInStage;
+	//TODO: The probability that after it deploys and it goes to build again 1) it could be a new component 2) or a requested rework component;
+	double reworkProbability;
+	
 	
 	public Job (int jobID, Parameters params, Map<Integer, ArrayList<Stage>> pipelines){	
 		this.jobID = jobID;
@@ -51,6 +58,7 @@ public class Job {
 			int nextStageID;
 			if (this.isAborted) {
 				abortWaiting();
+				//TODO: Build is with h the highest probability, but I can resatrt in other stages.  
 				nextStageID = abortedRestartStageID;
 			}
 			else {
@@ -84,6 +92,7 @@ public class Job {
 			this.isAborted = false;
 		}
 	}
+	
 	
 	public int getJobID() {
 		return jobID;

@@ -26,6 +26,7 @@ public class Stage {
 	//stage properties
 	private int capacity;
 	private int duration;	
+	//TODO: It depends on the stage. We need to have different manual process
 	private int manualProcessTime;
 	private int abortWaitingTime;
 	//private double abortedRatio;
@@ -61,6 +62,7 @@ public class Stage {
 			jobsProcessedByStage++;
 		}		
 	}
+	
 	
 	@SuppressWarnings("unchecked")
 	public void handlingNewJob(Job currentJob){

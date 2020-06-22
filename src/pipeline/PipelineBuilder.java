@@ -45,6 +45,7 @@ public class PipelineBuilder implements ContextBuilder<Object>{
 		for (int j = 0; j < num_stages; j++) {
 			ArrayList<Stage> sameStageInDifferentPipelines = new ArrayList<Stage>(num_pipelines);
 			for (int i = 0; i < num_pipelines; i++) {
+				//TODO: to 
 				Stage tempStages = new Stage(i,j,params, grid);
 				sameStageInDifferentPipelines.add(tempStages);
 				
@@ -55,7 +56,8 @@ public class PipelineBuilder implements ContextBuilder<Object>{
 		}
 		//*************************************************************************************
 		//Create Jobs -> commit Jobs
-		int jobCount = params.getInteger("num_jobs"); 
+		int jobCount = params.getInteger("num_jobs");
+		//TODO:modify to generate them in distributed way, Use weibull distribution
 		for (int i = 0; i < jobCount ; i++) {
 			Job new_job = new Job(i,params, pipeline);
 			context.add(new_job);		
