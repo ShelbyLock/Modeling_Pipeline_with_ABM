@@ -68,13 +68,13 @@ public class Stage {
 			currentJob.processedTotalTime = currentJob.processedTotalTime + manualProcessTime;
 			currentJob.processedTime = manualProcessTime;
 			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
-			System.out.print("Job (JobID: " +Integer.toString(currentJob.getJobID())+ ") is manually processed! \n");
+			System.out.print("(JobID: " +Integer.toString(currentJob.getJobID())+ ") would be manually processed! \n");
 		}
 		else {
 			currentJob.processedTime = currentJob.processedTotalTime + duration;
 			currentJob.processedTime = duration;
 			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
-			System.out.print("Job (JobID: "+Integer.toString(currentJob.getJobID())+") is automatically processed! \n");
+			System.out.print("(JobID: "+Integer.toString(currentJob.getJobID())+") would be automatically processed! \n");
 		}
 		
 		
@@ -92,12 +92,12 @@ public class Stage {
 		
 		currentJob.processedTime--;
 		System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
-		System.out.print("Handling Job (JobID: " +Integer.toString(currentJob.getJobID())+ ") the remaining time is "+ Integer.toString(currentJob.processedTime) +"\n");
+		System.out.print("(JobID: " +Integer.toString(currentJob.getJobID())+ ") is being handled. Remaining time is "+ Integer.toString(currentJob.processedTime) +"\n");
 
 		if (currentJob.processedTime == 0) {
 			currentJob.isHandled = true;
 			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
-			System.out.print("Finish Job (JobID: " +Integer.toString(currentJob.getJobID())+") \n");
+			System.out.print("(JobID: " +Integer.toString(currentJob.getJobID())+") is Finished \n");
 			shouldIabortCurrentJob(currentJob);
 			
 			this.jobQueue.remove(currentJob);
@@ -112,14 +112,14 @@ public class Stage {
 		if (!shoudStageAbort) {
 			currentJob.isAborted = false;
 			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
-			System.out.print("Job (JobID: " +Integer.toString(currentJob.getJobID())+ ") is not aborted! \n");
+			System.out.print("(JobID: " +Integer.toString(currentJob.getJobID())+ ") is not aborted! \n");
 		}
 		else {
 			currentJob.isAborted = true;
 			currentJob.processedTotalTime = currentJob.processedTotalTime + abortWaitingTime;
 			currentJob.abortWaitingTime = abortWaitingTime;
 			System.out.print("Pipeline "+Integer.toString(this.pipelineID)+ " Stage " +Integer.toString(this.stageID)+ " :");
-			System.out.print("Job (JobID: " +Integer.toString(currentJob.getJobID())+ ") is aborted! \n");
+			System.out.print("(JobID: " +Integer.toString(currentJob.getJobID())+ ") is aborted! \n");
 		}
 	}
 	public void addNewJob(Job job) {

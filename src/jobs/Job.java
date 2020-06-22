@@ -44,32 +44,26 @@ public class Job {
 	}
 	
 	@ScheduledMethod(start = 2, interval = 1)
-	public void changeState() {
-		int nextStageID;
-		if (this.isAborted)
-			nextStageID = abortedRestartStageID;
-		else
-			nextStageID = RandomHelper.nextIntFromTo (0, this.num_stages-1);
-		
-		System.out.print("Job: Job (JobID: "+Integer.toString(this.getJobID())+" next stage is "+Integer.toString(nextStageID)+ "\n");
-		
-		this.isAborted = false;
-		
-		if (this.abortWaitingTime != 0) {
-			this.abortWaitingTime--;
-			System.out.print("Job: Job (JobID: "+Integer.toString(this.getJobID())+" remaining abort handling time"+Integer.toString(this.abortWaitingTime)+ "\n");
-		}
-		else if (this.isHandled) {
-			int nextPipelineID = moveToDifferentStage(nextStageID);
-			System.out.print("Job: Job (JobID: "+Integer.toString(this.getJobID())+" next pipeline is "+Integer.toString(nextPipelineID)+ "\n");
-			System.out.print("Job: Job (JobID: "+Integer.toString(this.getJobID())+") have been finished by \n");
-			System.out.print("Pipeline "+Integer.toString(nextPipelineID)+ " Stage " +Integer.toString(nextStageID)+ " :");
+	public void changeStage() {
+		if (this.isHandled) {
+			int nextStageID;
+			if (this.isAborted) {
+				abortWaiting();
+				nextStageID = abortedRestartStageID;
+			}
+			else {
+				nextStageID = RandomHelper.nextIntFromTo (0, this.num_stages-1);
+				moveNextStage(nextStageID);
+			}
 		} 
 	}
 	
-	public int moveToDifferentStage(int nextStageID) {
+	public void moveNextStage(int nextStageID) {
 		//Go to a random stage
 		int nextPipelineID = RandomHelper.nextIntFromTo (0, this.num_pipelines - 1);
+		System.out.print("Job: (JobID: "+Integer.toString(this.getJobID())+") next stage is "+Integer.toString(nextStageID)+ "\n");
+		System.out.print("Job: (JobID: "+Integer.toString(this.getJobID())+") next pipeline is "+Integer.toString(nextPipelineID)+ "\n");
+		
 		ArrayList<Stage> sameStageInDifferentPipelines = pipelines.get(nextStageID);
 		Stage nextStage = sameStageInDifferentPipelines.get(nextPipelineID);
 		this.stageHistoryList.add(new StageHistory(nextPipelineID, nextStageID));
@@ -78,7 +72,14 @@ public class Job {
 		//decide if it is manual
 		this.isManual = new Random().nextBoolean();
 		this.isHandled = false;
-		return nextPipelineID;
+	}
+	
+	public void abortWaiting() {
+		this.abortWaitingTime--;
+		System.out.print("Job: (JobID: "+Integer.toString(this.getJobID())+")'s remaining abort handling time "+Integer.toString(this.abortWaitingTime)+ "\n");
+		if (this.abortWaitingTime == 0) {
+			this.isAborted = false;
+		}
 	}
 	
 	public int getJobID() {
